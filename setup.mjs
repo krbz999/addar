@@ -17,6 +17,7 @@ async function resource(key, data) {
 }
 
 Hooks.on("renderActorSheet", async function(sheet, html) {
+  if (sheet.object.type !== "character") return;
   const box = html[0].querySelector("form > .sheet-body > .tab.attributes.flexrow > .center-pane.flexcol > .attributes.flexrow");
   const DIV = document.createElement("DIV");
   const data = Object.entries(sheet.object.getFlag("addar", "resource") ?? {});
