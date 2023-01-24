@@ -31,7 +31,7 @@ Hooks.on("renderActorSheet", async function(sheet, html) {
     });
   }
 
-  DIV.innerHTML = `<a class="addar add-resource"><i class="fa-solid fa-plus"></i></a>`;
+  DIV.innerHTML = `<a class="addar add-resource" data-tooltip="ADDAR.AddResource"><i class="fa-solid fa-plus"></i></a>`;
   const add = box.appendChild(DIV.firstElementChild);
   add.addEventListener("click", async (event) => {
     await sheet.object.setFlag("addar", `resource.${foundry.utils.randomID()}`, {});
