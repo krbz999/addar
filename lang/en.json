@@ -1,6 +1,6 @@
 {
-  "ADDAR.Resource": "Resource",
   "ADDAR.AddResource": "Add new resource",
+  "ADDAR.CustomResource": "Custom Resource",
   "ADDAR.DeleteResource": "Delete this resource",
-  "ADDAR.CustomResource": "Custom Resource"
+  "ADDAR.Resource": "Resource"
 }

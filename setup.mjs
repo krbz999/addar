@@ -1,47 +1,53 @@
-async function resource(key, data) {
+/* getData function. */
+function getData(key, data) {
   if (!key) return false;
   const name = `flags.addar.resource.${key}`;
 
-  const props = {
-    label: foundry.utils.getProperty(data, "label") ?? "",
+  return {
+    label: (foundry.utils.getProperty(data, "label") || "").trim(),
     sr: !!foundry.utils.getProperty(data, "sr"),
     lr: !!foundry.utils.getProperty(data, "lr"),
-    value: foundry.utils.getProperty(data, "value") ?? "",
-    max: foundry.utils.getProperty(data, "max") ?? "",
+    value: foundry.utils.getProperty(data, "value") || "",
+    max: foundry.utils.getProperty(data, "max") || "",
     name,
     id: key
   };
-
-  const template = "modules/addar/templates/resource.hbs";
-  return renderTemplate(template, props);
 }
 
+/* Add custom resource as a consumption option for items. */
 Hooks.once("setup", function() {
   CONFIG.DND5E.abilityConsumptionTypes["flags.addar.resource"] = game.i18n.localize("ADDAR.CustomResource");
 });
 
+/* Inject resources onto sheet. */
 Hooks.on("renderActorSheet", async function(sheet, html) {
   if (sheet.object.type !== "character") return;
   const box = html[0].querySelector("form > .sheet-body > .tab.attributes.flexrow > .center-pane.flexcol > .attributes.flexrow");
   const DIV = document.createElement("DIV");
   const data = Object.entries(sheet.object.getFlag("addar", "resource") ?? {});
+  const resources = [];
   for (const [id, vals] of data) {
-    const inner = await resource(id, vals);
+    const inner = getData(id, vals);
     if (!inner) continue;
-    DIV.innerHTML = inner;
-    const res = box.appendChild(DIV.firstElementChild);
-    res.querySelector("[data-id]").addEventListener("click", async (event) => {
-      await sheet.object.unsetFlag("addar", `resource.${event.currentTarget.dataset.id}`);
-    });
+    resources.push(inner);
   }
 
-  DIV.innerHTML = `<a class="addar add-resource" data-tooltip="ADDAR.AddResource"><i class="fa-solid fa-plus"></i></a>`;
-  const add = box.appendChild(DIV.firstElementChild);
-  add.addEventListener("click", async (event) => {
-    await sheet.object.setFlag("addar", `resource.${foundry.utils.randomID()}`, {});
+  const template = "modules/addar/templates/resource.hbs";
+  DIV.innerHTML = await renderTemplate(template, { resources });
+  box.append(...DIV.children);
+
+  html[0].querySelectorAll(".delete-resource.config-button").forEach((trash) => {
+    trash.addEventListener("click", (event) => {
+      return sheet.document.unsetFlag("addar", `resource.${event.currentTarget.dataset.id}`);
+    });
+  });
+
+  html[0].querySelector(".addar.add-resource").addEventListener("click", () => {
+    return sheet.object.setFlag("addar", `resource.${foundry.utils.randomID()}`, {});
   });
 });
 
+/* Inject custom resource consumption option onto item sheet. */
 Hooks.on("renderItemSheet", function(sheet, html) {
   if (sheet.item.system.consume?.type !== "flags.addar.resource") return;
   const actor = sheet.item.actor;
@@ -58,6 +64,7 @@ Hooks.on("renderItemSheet", function(sheet, html) {
   if (tar) tar.innerHTML = options;
 });
 
+/* Adjust consumed target during item usage. */
 Hooks.on("dnd5e.preItemUsageConsumption", function(item, options, config) {
   if (options.consumeResource && item.system.consume.target.startsWith("flags.addar.resource")) {
     options.consumeResource = false;
@@ -65,6 +72,7 @@ Hooks.on("dnd5e.preItemUsageConsumption", function(item, options, config) {
   }
 });
 
+/* Adjust consumed target during item usage. */
 Hooks.on("dnd5e.itemUsageConsumption", function(item, options, config, updates) {
   const name = options.consumeCustomResource;
   if (!name) return;
@@ -77,6 +85,7 @@ Hooks.on("dnd5e.itemUsageConsumption", function(item, options, config, updates) 
   updates.actorUpdates[name] = newValue;
 });
 
+/* Restore resources during a short or long rest. */
 Hooks.on("dnd5e.preRestCompleted", function(actor, update) {
   const data = Object.entries(actor.getFlag("addar", "resource") ?? {});
   const LR = update.longRest;

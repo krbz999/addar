@@ -1,3 +1,4 @@
+{{#each resources as |res|}}
 <li class="addar attribute resource">
   <h4 class="attribute-name box-title">
     <input name="{{name}}.label" type="text" value="{{label}}" placeholder="{{localize 'ADDAR.Resource'}}">
@@ -17,3 +18,5 @@
     </label>
   </div>
 </li>
+{{/each}}
+<a class="addar add-resource" data-tooltip="ADDAR.AddResource"><i class="fa-solid fa-plus"></i></a>
