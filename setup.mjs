@@ -1,19 +1,3 @@
-/* getData function. */
-function getData(key, data) {
-  if (!key) return false;
-  const name = `flags.addar.resource.${key}`;
-
-  return {
-    label: (foundry.utils.getProperty(data, "label") || "").trim(),
-    sr: !!foundry.utils.getProperty(data, "sr"),
-    lr: !!foundry.utils.getProperty(data, "lr"),
-    value: foundry.utils.getProperty(data, "value") || "",
-    max: foundry.utils.getProperty(data, "max") || "",
-    name,
-    id: key
-  };
-}
-
 /* Add custom resource as a consumption option for items. */
 Hooks.once("setup", function() {
   CONFIG.DND5E.abilityConsumptionTypes["flags.addar.resource"] = game.i18n.localize("ADDAR.CustomResource");
@@ -22,29 +6,45 @@ Hooks.once("setup", function() {
 /* Inject resources onto sheet. */
 Hooks.on("renderActorSheet", async function(sheet, html) {
   if (sheet.object.type !== "character") return;
-  const box = html[0].querySelector("form > .sheet-body > .tab.attributes.flexrow > .center-pane.flexcol > .attributes.flexrow");
+  const box = html[0].querySelector(".dnd5e.sheet.actor .center-pane ul.attributes");
   const DIV = document.createElement("DIV");
-  const data = Object.entries(sheet.object.getFlag("addar", "resource") ?? {});
-  const resources = [];
-  for (const [id, vals] of data) {
-    const inner = getData(id, vals);
-    if (!inner) continue;
-    resources.push(inner);
-  }
+  const resources = Object.entries(sheet.object.flags.addar?.resource ?? {}).reduce((acc, [id, data]) => {
+    if (!id) return acc;
+    acc.push({
+      label: (data.label || "").trim(),
+      name: `flags.addar.resource.${id}`,
+      id,
+      sr: !!data.sr,
+      lr: !!data.lr,
+      value: data.value || null,
+      max: data.max || null
+    });
+    return acc;
+  }, []);
 
   const template = "modules/addar/templates/resource.hbs";
   DIV.innerHTML = await renderTemplate(template, { resources });
   box.append(...DIV.children);
 
-  html[0].querySelectorAll(".delete-resource.config-button").forEach((trash) => {
-    trash.addEventListener("click", (event) => {
-      return sheet.document.unsetFlag("addar", `resource.${event.currentTarget.dataset.id}`);
-    });
-  });
+  const configs = html[0].querySelectorAll(".delete-resource.config-button");
+  configs.forEach(trash => trash.addEventListener("click", (event) => {
+    return sheet.document.unsetFlag("addar", `resource.${event.currentTarget.dataset.id}`);
+  }));
+
+  html[0].querySelectorAll("input").forEach(input => input.addEventListener("focus", (event) => {
+    sheet._addarFocus = event.currentTarget.name;
+    if (event.currentTarget.closest(".addar")) event.currentTarget.select();
+  }));
 
   html[0].querySelector(".addar.add-resource").addEventListener("click", () => {
     return sheet.object.setFlag("addar", `resource.${foundry.utils.randomID()}`, {});
   });
+
+  const foc = html[0].querySelector(`[name="${sheet._addarFocus}"]`);
+  if (foc && sheet._addarFocus.includes("addar")) foc.focus();
+
+  const inputs = html[0].querySelectorAll(".addar input[type='text'][data-dtype='Number']");
+  inputs.forEach(input => input.addEventListener("change", sheet._onChangeInputDelta.bind(sheet)));
 });
 
 /* Inject custom resource consumption option onto item sheet. */
@@ -59,7 +59,7 @@ Hooks.on("renderItemSheet", function(sheet, html) {
     const value = `flags.addar.resource.${id}.value`;
     const s = value === selected ? "selected" : "";
     return acc + `<option value="${value}" ${s}>${label}</option>`;
-  }, "");
+  }, "<option value=''></option>");
   const tar = html[0].querySelector("[name='system.consume.target']");
   if (tar) tar.innerHTML = options;
 });
@@ -79,7 +79,9 @@ Hooks.on("dnd5e.itemUsageConsumption", function(item, options, config, updates) 
   const newValue = foundry.utils.getProperty(item.actor, name) - (item.system.consume.amount || 1);
   if (newValue < 0) {
     const typeLabel = CONFIG.DND5E.abilityConsumptionTypes[item.system.consume.type];
-    ui.notifications.warn(game.i18n.format("DND5E.ConsumeWarningNoQuantity", { name: item.name, type: typeLabel }));
+    ui.notifications.warn(game.i18n.format("DND5E.ConsumeWarningNoQuantity", {
+      name: item.name, type: typeLabel
+    }));
     return false;
   }
   updates.actorUpdates[name] = newValue;
@@ -87,7 +89,7 @@ Hooks.on("dnd5e.itemUsageConsumption", function(item, options, config, updates) 
 
 /* Restore resources during a short or long rest. */
 Hooks.on("dnd5e.preRestCompleted", function(actor, update) {
-  const data = Object.entries(actor.getFlag("addar", "resource") ?? {});
+  const data = Object.entries(actor.flags.addar?.resource ?? {});
   const LR = update.longRest;
   for (const [id, vals] of data) {
     if ((vals.sr) || (vals.lr && LR)) {
