@@ -7,7 +7,7 @@ Hooks.once("setup", function() {
 Hooks.on("renderActorSheet", async function(sheet, html) {
   if (sheet.object.type !== "character") return;
   const box = html[0].querySelector(".dnd5e.sheet.actor .center-pane ul.attributes");
-  const DIV = document.createElement("DIV");
+  const div = document.createElement("DIV");
   const resources = Object.entries(sheet.object.flags.addar?.resource ?? {}).reduce((acc, [id, data]) => {
     if (!id) return acc;
     acc.push({
@@ -21,10 +21,9 @@ Hooks.on("renderActorSheet", async function(sheet, html) {
     });
     return acc;
   }, []);
-
   const template = "modules/addar/templates/resource.hbs";
-  DIV.innerHTML = await renderTemplate(template, { resources });
-  box.append(...DIV.children);
+  div.innerHTML = await renderTemplate(template, {resources});
+  box.append(...div.children);
 
   const configs = html[0].querySelectorAll(".delete-resource.config-button");
   configs.forEach(trash => trash.addEventListener("click", (event) => {
@@ -57,7 +56,7 @@ Hooks.on("renderItemSheet", function(sheet, html) {
   const options = ids.reduce((acc, id) => {
     const label = actor.flags.addar.resource[id].label || game.i18n.localize("ADDAR.Resource");
     const value = `flags.addar.resource.${id}.value`;
-    const s = value === selected ? "selected" : "";
+    const s = (value === selected) ? "selected" : "";
     return acc + `<option value="${value}" ${s}>${label}</option>`;
   }, "<option value=''></option>");
   const tar = html[0].querySelector("[name='system.consume.target']");
