@@ -5,10 +5,10 @@ Hooks.once("setup", function() {
 
 /* Inject resources onto sheet. */
 Hooks.on("renderActorSheet", async function(sheet, html) {
-  if (sheet.object.type !== "character") return;
+  if (sheet.document.type !== "character") return;
   const box = html[0].querySelector(".dnd5e.sheet.actor .center-pane ul.attributes");
-  const DIV = document.createElement("DIV");
-  const resources = Object.entries(sheet.object.flags.addar?.resource ?? {}).reduce((acc, [id, data]) => {
+  const div = document.createElement("DIV");
+  const resources = Object.entries(sheet.document.flags.addar?.resource ?? {}).reduce((acc, [id, data]) => {
     if (!id) return acc;
     acc.push({
       label: (data.label || "").trim(),
@@ -21,30 +21,31 @@ Hooks.on("renderActorSheet", async function(sheet, html) {
     });
     return acc;
   }, []);
-
   const template = "modules/addar/templates/resource.hbs";
-  DIV.innerHTML = await renderTemplate(template, { resources });
-  box.append(...DIV.children);
+  div.innerHTML = await renderTemplate(template, {resources});
 
-  const configs = html[0].querySelectorAll(".delete-resource.config-button");
-  configs.forEach(trash => trash.addEventListener("click", (event) => {
-    return sheet.document.unsetFlag("addar", `resource.${event.currentTarget.dataset.id}`);
-  }));
+  div.querySelectorAll("[data-action='delete-resource']").forEach(trash => {
+    trash.addEventListener("click", (event) => {
+      return sheet.document.unsetFlag("addar", `resource.${event.currentTarget.dataset.id}`);
+    });
+  });
+
+  div.querySelector("[data-action='add-resource']").addEventListener("click", () => {
+    return sheet.document.setFlag("addar", `resource.${foundry.utils.randomID()}`, {});
+  });
+
+  div.querySelectorAll("input[type='text'][data-dtype='Number']").forEach(input => {
+    input.addEventListener("change", sheet._onChangeInputDelta.bind(sheet));
+  });
+
+  const foc = div.querySelector(`[name="${sheet._addarFocus}"]`);
+  box.append(...div.children);
+  if (foc && sheet._addarFocus.includes("addar")) foc.focus();
 
   html[0].querySelectorAll("input").forEach(input => input.addEventListener("focus", (event) => {
     sheet._addarFocus = event.currentTarget.name;
     if (event.currentTarget.closest(".addar")) event.currentTarget.select();
   }));
-
-  html[0].querySelector(".addar.add-resource").addEventListener("click", () => {
-    return sheet.object.setFlag("addar", `resource.${foundry.utils.randomID()}`, {});
-  });
-
-  const foc = html[0].querySelector(`[name="${sheet._addarFocus}"]`);
-  if (foc && sheet._addarFocus.includes("addar")) foc.focus();
-
-  const inputs = html[0].querySelectorAll(".addar input[type='text'][data-dtype='Number']");
-  inputs.forEach(input => input.addEventListener("change", sheet._onChangeInputDelta.bind(sheet)));
 });
 
 /* Inject custom resource consumption option onto item sheet. */
@@ -57,7 +58,7 @@ Hooks.on("renderItemSheet", function(sheet, html) {
   const options = ids.reduce((acc, id) => {
     const label = actor.flags.addar.resource[id].label || game.i18n.localize("ADDAR.Resource");
     const value = `flags.addar.resource.${id}.value`;
-    const s = value === selected ? "selected" : "";
+    const s = (value === selected) ? "selected" : "";
     return acc + `<option value="${value}" ${s}>${label}</option>`;
   }, "<option value=''></option>");
   const tar = html[0].querySelector("[name='system.consume.target']");
@@ -78,9 +79,9 @@ Hooks.on("dnd5e.itemUsageConsumption", function(item, options, config, updates) 
   if (!name) return;
   const newValue = foundry.utils.getProperty(item.actor, name) - (item.system.consume.amount || 1);
   if (newValue < 0) {
-    const typeLabel = CONFIG.DND5E.abilityConsumptionTypes[item.system.consume.type];
     ui.notifications.warn(game.i18n.format("DND5E.ConsumeWarningNoQuantity", {
-      name: item.name, type: typeLabel
+      name: item.name,
+      type: CONFIG.DND5E.abilityConsumptionTypes[item.system.consume.type]
     }));
     return false;
   }

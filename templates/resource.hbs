@@ -1,22 +1,26 @@
-{{#each resources as |res|}}
+{{#each resources}}
 <li class="addar attribute resource">
   <h4 class="attribute-name box-title">
     <input name="{{name}}.label" type="text" value="{{label}}" placeholder="{{localize 'ADDAR.Resource'}}">
   </h4>
-  <a class="delete-resource config-button" data-id="{{id}}" data-tooltip="ADDAR.DeleteResource">
+  <a class="config-button" data-action="delete-resource" data-id="{{id}}">
     <i class="fa-solid fa-trash"></i>
   </a>
   <div class="attribute-value">
     <label class="recharge checkbox flexcol">
-      <span>SR</span><input name="{{name}}.sr" type="checkbox" {{checked sr}}>
+      <span>{{localize "DND5E.AbbreviationSR"}}</span>
+      <input name="{{name}}.sr" type="checkbox" {{checked sr}}>
     </label>
     <input type="text" name="{{name}}.value" value="{{value}}" placeholder="0" data-dtype="Number">
     <span class="sep"> / </span>
     <input type="text" name="{{name}}.max" value="{{max}}" placeholder="0" data-dtype="Number">
     <label class="recharge checkbox flexcol">
-      <span>LR</span><input name="{{name}}.lr" type="checkbox" {{checked lr}}>
+      <span>{{localize "DND5E.AbbreviationLR"}}</span>
+      <input name="{{name}}.lr" type="checkbox" {{checked lr}}>
     </label>
   </div>
 </li>
 {{/each}}
-<a class="addar add-resource" data-tooltip="ADDAR.AddResource"><i class="fa-solid fa-plus"></i></a>
+<a class="addar" data-action="add-resource" data-tooltip="ADDAR.AddResource">
+  <i class="fa-solid fa-plus"></i>
+</a>

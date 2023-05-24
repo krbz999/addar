@@ -2,7 +2,7 @@
   position: relative;
 }
 
-.addar.attribute.resource a.delete-resource.config-button {
+.addar.attribute.resource [data-action="delete-resource"] {
   position: absolute;
   padding: 4px;
   right: 0;
@@ -10,11 +10,11 @@
   display: none;
 }
 
-.addar.attribute.resource:hover a.delete-resource.config-button {
+.addar.attribute.resource:hover [data-action="delete-resource"] {
   display: block;
 }
 
-a.addar.add-resource {
+.addar[data-action="add-resource"] {
   display: flex;
   align-items: center;
   min-width: 100%;
