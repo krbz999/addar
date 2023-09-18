@@ -1,7 +1,6 @@
 .addar.attribute.resource {
   position: relative;
 }
-
 .addar.attribute.resource [data-action="delete-resource"] {
   position: absolute;
   padding: 4px;
@@ -9,11 +8,9 @@
   top: 0;
   display: none;
 }
-
 .addar.attribute.resource:hover [data-action="delete-resource"] {
   display: block;
 }
-
 .addar[data-action="add-resource"] {
   display: flex;
   align-items: center;
@@ -24,12 +21,10 @@
   padding: 1px;
   order: -5;
 }
-
 .dnd5e.sheet.actor .center-pane ul.attributes li.attribute.resource {
   min-width: 115px;
   margin: 0;
 }
-
 input[type="text"][name^="flags.addar.resource"] {
   max-width: calc(100% - 1em);
 }

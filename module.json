@@ -1,22 +1,23 @@
 {
   "id": "addar",
   "title": "Add a Resource",
-  "version": "11.0.0",
+  "version": "11.0.1",
   "authors": [
     {
       "name": "Zhell",
       "url": "https://github.com/krbz999",
-      "discord": "Zhell#9201",
-      "flags": {}
+      "discord": "Zhell9201",
+      "ko-fi": "https://ko-fi.com/zhell",
+      "patreon": "https://patreon.com/zhell"
     }
   ],
   "compatibility": {
-    "minimum": "10",
+    "minimum": "11",
     "maximum": "11",
-    "verified": "11.298"
+    "verified": "11"
   },
   "esmodules": [
-    "setup.mjs"
+    "module/addar.mjs"
   ],
   "styles": [
     "styles/styles.css"
@@ -31,5 +32,5 @@
   ],
   "url": "https://github.com/krbz999/addar",
   "manifest": "https://github.com/krbz999/addar/releases/latest/download/module.json",
-  "download": "https://github.com/krbz999/addar/releases/download/v11.0.0/module.zip"
+  "download": "https://github.com/krbz999/addar/releases/download/v11.0.1/module.zip"
 }
